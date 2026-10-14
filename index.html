@@ -71,6 +71,61 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     document.querySelectorAll(".heart-btn").forEach(button=>button.addEventListener("click",()=>{const count=button.querySelector("span");button.classList.toggle("liked");count.textContent=Number(count.textContent)+(button.classList.contains("liked")?1:-1)}));
     document.getElementById("spottedForm").addEventListener("submit",event=>{event.preventDefault();const text=document.getElementById("spottedText").value.trim();if(!text)return announce("Scrivi prima il messaggio.");announce("Messaggio inviato alla moderazione.");document.getElementById("spottedText").value=""});
     document.querySelectorAll(".poll-option").forEach(button=>button.addEventListener("click",()=>{const poll=button.closest(".poll-card");poll.querySelectorAll(".poll-option").forEach(option=>option.classList.remove("selected"));button.classList.add("selected");announce(`Hai scelto: ${button.dataset.choice}`)}));
-  </script>
+  async function loadPublishedAnnouncements() {
+  const list = document.getElementById("noticeList");
+  const allList = document.getElementById("allNotices");
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("announcements")
+      .select("title, body, category, created_at")
+      .eq("published", true)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data || data.length === 0) return;
+
+    const formatNotice = (item) => {
+      const date = item.created_at ? new Date(item.created_at) : new Date();
+      const day = new Intl.DateTimeFormat("it-IT", { day: "2-digit" }).format(date);
+      const month = new Intl.DateTimeFormat("it-IT", { month: "short" }).format(date);
+      const notice = document.createElement("div");
+      notice.className = "notice";
+      notice.dataset.search = `${item.title || ""} ${item.body || ""} ${item.category || ""}`.toLowerCase();
+
+      const dateBox = document.createElement("div");
+      dateBox.className = "notice-date";
+      const dayBox = document.createElement("b");
+      dayBox.textContent = day;
+      const monthBox = document.createElement("small");
+      monthBox.textContent = month;
+      dateBox.append(dayBox, monthBox);
+
+      const content = document.createElement("div");
+      const heading = document.createElement("h4");
+      heading.textContent = item.title || "Avviso";
+      const body = document.createElement("p");
+      body.textContent = item.body || "";
+      content.append(heading, body);
+
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = item.category || "Scuola";
+
+      notice.append(dateBox, content, badge);
+      return notice;
+    };
+
+    list.replaceChildren(...data.map(formatNotice));
+    allList.replaceChildren(...data.map(formatNotice));
+
+    const disclaimer = document.querySelector(".notice-disclaimer");
+    if (disclaimer) disclaimer.hidden = true;
+  } catch (error) {
+    console.error("Caricamento avvisi non riuscito:", error);
+  }
+}
+
+loadPublishedAnnouncements(); </script>
 </body>
 </html>
