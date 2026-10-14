@@ -67,7 +67,6 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     document.getElementById("search").addEventListener("input",e=>{const q=e.target.value.toLowerCase().trim();const list=document.getElementById("noticeList");if(q)showView("avvisi");document.querySelectorAll("#allNotices .notice").forEach(n=>n.hidden=q&&!(`${n.dataset.search} ${n.innerText}`.toLowerCase().includes(q)))});
     const today=new Date();document.getElementById("today").textContent=new Intl.DateTimeFormat("it-IT",{weekday:"long",day:"numeric",month:"long"}).format(today);document.getElementById("today").textContent=document.getElementById("today").textContent.charAt(0).toUpperCase()+document.getElementById("today").textContent.slice(1);
     const toast=document.getElementById("toast");function announce(msg){toast.textContent=msg;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),2800)}
-    document.getElementById("loginBtn").addEventListener("click",()=>announce("Accesso Supabase: da configurare con il progetto della scuola."));document.getElementById("helpBtn").addEventListener("click",()=>announce("Contatti della segreteria da aggiungere."));document.getElementById("menuBtn").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
     document.querySelectorAll(".heart-btn").forEach(button=>button.addEventListener("click",()=>{const count=button.querySelector("span");button.classList.toggle("liked");count.textContent=Number(count.textContent)+(button.classList.contains("liked")?1:-1)}));
     document.getElementById("spottedForm").addEventListener("submit",event=>{event.preventDefault();const text=document.getElementById("spottedText").value.trim();if(!text)return announce("Scrivi prima il messaggio.");announce("Messaggio inviato alla moderazione.");document.getElementById("spottedText").value=""});
     document.querySelectorAll(".poll-option").forEach(button=>button.addEventListener("click",()=>{const poll=button.closest(".poll-card");poll.querySelectorAll(".poll-option").forEach(option=>option.classList.remove("selected"));button.classList.add("selected");announce(`Hai scelto: ${button.dataset.choice}`)}));
@@ -127,5 +126,78 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
 loadPublishedAnnouncements(); </script>
+
+<div id="authModal" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:white;color:#222;padding:24px;border-radius:16px;width:100%;max-width:380px">
+    <h2>Accedi a SannazzaroStudenti</h2>
+    <label for="authEmail">Email</label>
+    <input id="authEmail" type="email" autocomplete="email" placeholder="La tua email" style="display:block;width:100%;padding:10px;margin:8px 0 14px;box-sizing:border-box">
+    <label for="authPassword">Password</label>
+    <input id="authPassword" type="password" autocomplete="current-password" placeholder="La tua password" style="display:block;width:100%;padding:10px;margin:8px 0 14px;box-sizing:border-box">
+    <button id="authSignIn" type="button">Accedi</button>
+    <button id="authSignUp" type="button">Crea account</button>
+    <button id="authClose" type="button">Chiudi</button>
+    <p id="authMessage" role="status"></p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const modal = document.getElementById("authModal");
+  const message = document.getElementById("authMessage");
+  const email = document.getElementById("authEmail");
+  const password = document.getElementById("authPassword");
+
+  function showMessage(text) {
+    message.textContent = text;
+  }
+
+  document.getElementById("loginBtn")?.addEventListener("click", () => {
+    modal.style.display = "flex";
+    showMessage("");
+  });
+
+  document.getElementById("authClose").addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  async function authenticate(mode) {
+    const client = window.db || window.supabaseClient || window.supabase;
+    if (!client || typeof client.auth?.signInWithPassword !== "function") {
+      showMessage("Connessione Supabase non trovata. Serve verificare la configurazione esistente.");
+      return;
+    }
+
+    const userEmail = email.value.trim();
+    const userPassword = password.value;
+
+    if (!userEmail || !userPassword) {
+      showMessage("Inserisci email e password.");
+      return;
+    }
+
+    showMessage("Attendi…");
+
+    try {
+      const result = mode === "signin"
+        ? await client.auth.signInWithPassword({ email: userEmail, password: userPassword })
+        : await client.auth.signUp({ email: userEmail, password: userPassword });
+
+      if (result.error) throw result.error;
+
+      showMessage(
+        mode === "signin"
+          ? "Accesso effettuato."
+          : "Account creato. Se richiesto, conferma l'email prima di accedere."
+      );
+    } catch (error) {
+      showMessage(error.message || "Accesso non riuscito.");
+    }
+  }
+
+  document.getElementById("authSignIn").addEventListener("click", () => authenticate("signin"));
+  document.getElementById("authSignUp").addEventListener("click", () => authenticate("signup"));
+})();
+</script>
 </body>
 </html>
