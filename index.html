@@ -127,7 +127,9 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 loadPublishedAnnouncements(); </script>
 
-<div id="authModal" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center;padding:20px">
+
+</script>
+ <div id="authModal" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:white;color:#222;padding:24px;border-radius:16px;width:100%;max-width:380px">
     <h2>Accedi a SannazzaroStudenti</h2>
     <label for="authEmail">Email</label>
@@ -197,7 +199,5 @@ loadPublishedAnnouncements(); </script>
 
   document.getElementById("authSignIn").addEventListener("click", () => authenticate("signin"));
   document.getElementById("authSignUp").addEventListener("click", () => authenticate("signup"));
-})();
-</script>
-</body>
+})(); </body>
 </html>
