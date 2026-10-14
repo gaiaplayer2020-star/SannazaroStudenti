@@ -54,6 +54,11 @@
  
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
   <script>
+    
+const SUPABASE_URL = "https://alogzgfjewrioqtkfouh.supabase.co";
+const SUPABASE_KEY = "sb_publishable__CyYgpDz0YmRNTjK853YZA_LR8GJoER";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const names={home:"Panoramica",avvisi:"Avvisi",orario:"Orario",materiali:"Materiali didattici",spotted:"Spotted",sondaggi:"Sondaggi"};
     function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${name}`));document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));document.getElementById("crumbName").textContent=names[name];document.getElementById("sidebar").classList.remove("open");window.scrollTo({top:0,behavior:"smooth"})}
     document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
