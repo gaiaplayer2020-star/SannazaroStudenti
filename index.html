@@ -127,6 +127,120 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
 loadPublishedAnnouncements(); 
+    // === GESTIONE AVVISI AMMINISTRATORE ===
+(() => {
+  const client = window.supabaseClient;
+  if (!client) return;
+
+  const panel = document.createElement("section");
+  panel.id = "adminAnnouncementsPanel";
+  panel.style.cssText = `
+    display:none;
+    margin:24px auto;
+    padding:24px;
+    max-width:760px;
+    background:#ffffff;
+    border:1px solid #deded6;
+    border-radius:18px;
+    color:#244f3c;
+  `;
+
+  panel.innerHTML = `
+    <h2 style="margin-top:0">Gestione avvisi</h2>
+    <p>Area riservata all'amministratore.</p>
+
+    <form id="adminAnnouncementForm">
+      <label for="announcementTitle">Titolo</label>
+      <input id="announcementTitle" required maxlength="150"
+        style="display:block;width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px;border:1px solid #ccc;border-radius:8px">
+
+      <label for="announcementCategory">Categoria</label>
+      <select id="announcementCategory"
+        style="display:block;width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px;border:1px solid #ccc;border-radius:8px">
+        <option value="Generale">Generale</option>
+        <option value="Didattica">Didattica</option>
+        <option value="Circolari">Circolari</option>
+        <option value="Eventi">Eventi</option>
+      </select>
+
+      <label for="announcementBody">Testo dell'avviso</label>
+      <textarea id="announcementBody" required rows="5"
+        style="display:block;width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px;border:1px solid #ccc;border-radius:8px"></textarea>
+
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <input id="announcementPublished" type="checkbox" checked>
+        Pubblica subito sul sito
+      </label>
+
+      <button type="submit"
+        style="padding:12px 20px;border:0;border-radius:10px;background:#244f3c;color:white;cursor:pointer">
+        Salva avviso
+      </button>
+
+      <p id="adminAnnouncementMessage" role="status" aria-live="polite"></p>
+    </form>
+  `;
+
+  const insertPanel = () => {
+    if (!panel.isConnected) {
+      document.body.appendChild(panel);
+    }
+  };
+
+  function updateAdminPanel() {
+    const isAdmin = window.currentPortalRole === "admin";
+    if (isAdmin) {
+      insertPanel();
+      panel.style.display = "block";
+    } else {
+      panel.style.display = "none";
+    }
+  }
+
+  document.addEventListener("submit", async (event) => {
+    if (event.target.id !== "adminAnnouncementForm") return;
+    event.preventDefault();
+
+    const message = document.getElementById("adminAnnouncementMessage");
+    const title = document.getElementById("announcementTitle").value.trim();
+    const category = document.getElementById("announcementCategory").value;
+    const body = document.getElementById("announcementBody").value.trim();
+    const published = document.getElementById("announcementPublished").checked;
+
+    if (window.currentPortalRole !== "admin") {
+      message.textContent = "Devi accedere come amministratore.";
+      return;
+    }
+
+    message.textContent = "Salvataggio in corso…";
+
+    try {
+      const { error } = await client
+        .from("announcements")
+        .insert([{ title, body, category, published }]);
+
+      if (error) throw error;
+
+      message.textContent = published
+        ? "Avviso pubblicato correttamente."
+        : "Avviso salvato come bozza.";
+
+      event.target.reset();
+      document.getElementById("announcementPublished").checked = true;
+
+      if (published) {
+        await loadPublishedAnnouncements();
+      }
+    } catch (error) {
+      console.error("Errore nel salvataggio dell'avviso:", error);
+      message.textContent =
+        "Non è stato possibile salvare l'avviso. Verifica le autorizzazioni della tabella announcements in Supabase.";
+    }
+  });
+
+  updateAdminPanel();
+  setInterval(updateAdminPanel, 1000);
+})();
   </script>
 
  <div id="authModal" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center;padding:20px">
