@@ -239,6 +239,10 @@ loadPublishedAnnouncements();
   });
 
   updateAdminPanel();
+  document.addEventListener("portal-role-updated", (event) => {
+  window.currentPortalRole = event.detail.role;
+  updateAdminPanel();
+});
   setInterval(updateAdminPanel, 1000);
 })();
   </script>
@@ -341,12 +345,27 @@ async function authenticate(mode) {
       return;
     }
 
-    if (profile?.role === "admin") {
-      window.currentPortalRole = "admin";
-      showMessage("Accesso effettuato come amministratore.");
-    } else {
-      showMessage("Accesso effettuato.");
-    }
+   if (profile?.role === "admin") {
+  window.currentPortalRole = "admin";
+
+  document.dispatchEvent(
+    new CustomEvent("portal-role-updated", {
+      detail: { role: "admin" }
+    })
+  );
+
+  showMessage("Accesso effettuato come amministratore.");
+} else {
+  window.currentPortalRole = "student";
+
+  document.dispatchEvent(
+    new CustomEvent("portal-role-updated", {
+      detail: { role: "student" }
+    })
+  );
+
+  showMessage("Accesso effettuato.");
+}
 
   } catch (error) {
     console.error("Errore di autenticazione:", error);
