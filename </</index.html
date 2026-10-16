@@ -231,11 +231,13 @@ loadPublishedAnnouncements();
       if (published) {
         await loadPublishedAnnouncements();
       }
-    } catch (error) {
-      console.error("Errore nel salvataggio dell'avviso:", error);
-      message.textContent =
-        "Non è stato possibile salvare l'avviso. Verifica le autorizzazioni della tabella announcements in Supabase.";
-    }
+   } catch (error) {
+  console.error("Errore nel salvataggio dell'avviso:", error);
+
+  const details = error?.message || error?.details || "Errore sconosciuto";
+
+  message.textContent = "Errore Supabase: " + details;
+}
   });
 
   updateAdminPanel();
