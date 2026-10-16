@@ -163,39 +163,82 @@ loadPublishedAnnouncements();
     modal.style.display = "none";
   });
 
-  async function authenticate(mode) {
-    const client = window.db || window.supabaseClient || window.supabase;
-    if (!client || typeof client.auth?.signInWithPassword !== "function") {
-      showMessage("Connessione Supabase non trovata. Serve verificare la configurazione esistente.");
-      return;
-    }
+async function authenticate(mode) {
+  const client = window.db || window.supabaseClient || window.supabase;
 
-    const userEmail = email.value.trim();
-    const userPassword = password.value;
+  if (!client || typeof client.auth?.signInWithPassword !== "function") {
+    showMessage("Connessione Supabase non trovata.");
+    return;
+  }
 
-    if (!userEmail || !userPassword) {
-      showMessage("Inserisci email e password.");
-      return;
-    }
+  const userEmail = email.value.trim();
+  const userPassword = password.value;
 
-    showMessage("Attendi…");
+  if (!userEmail || !userPassword) {
+    showMessage("Inserisci email e password.");
+    return;
+  }
 
-    try {
-      const result = mode === "signin"
-        ? await client.auth.signInWithPassword({ email: userEmail, password: userPassword })
-        : await client.auth.signUp({ email: userEmail, password: userPassword });
+  showMessage("Attendi…");
 
-      if (result.error) throw result.error;
+  try {
+    if (mode === "signup") {
+      const { error } = await client.auth.signUp({
+        email: userEmail,
+        password: userPassword
+      });
+
+      if (error) throw error;
 
       showMessage(
-        mode === "signin"
-          ? "Accesso effettuato."
-          : "Account creato. Se richiesto, conferma l'email prima di accedere."
+        "Account creato. Se richiesto, conferma l'email prima di accedere."
       );
-    } catch (error) {
-      showMessage(error.message || "Accesso non riuscito.");
+      return;
     }
+
+    const { data, error } = await client.auth.signInWithPassword({
+      email: userEmail,
+      password: userPassword
+    });
+
+    if (error) throw error;
+
+    const user = data.user;
+
+    if (!user) {
+      showMessage("Accesso non completato. Riprova.");
+      return;
+    }
+
+    window.currentPortalUser = user;
+    window.currentPortalRole = "student";
+
+    const { data: profile, error: profileError } = await client
+      .from("portal_profiles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("Verifica del ruolo non riuscita:", profileError);
+      showMessage(
+        "Accesso effettuato, ma non è stato possibile verificare il ruolo. Controlla le autorizzazioni Supabase."
+      );
+      return;
+    }
+
+    if (profile?.role === "admin") {
+      window.currentPortalRole = "admin";
+      showMessage("Accesso effettuato come amministratore.");
+    } else {
+      showMessage("Accesso effettuato.");
+    }
+
+  } catch (error) {
+    console.error("Errore di autenticazione:", error);
+    showMessage(error.message || "Accesso non riuscito.");
   }
+}
 
   document.getElementById("authSignIn").addEventListener("click", () => authenticate("signin"));
   document.getElementById("authSignUp").addEventListener("click", () => authenticate("signup"));
