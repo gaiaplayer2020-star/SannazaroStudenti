@@ -58,6 +58,7 @@
 const SUPABASE_URL = "https://alogzgfjewrioqtkfouh.supabase.co";
 const SUPABASE_KEY = "sb_publishable__CyYgpDz0YmRNTjK853YZA_LR8GJoER";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.supabaseClient = supabaseClient;
 
     const names={home:"Panoramica",avvisi:"Avvisi",orario:"Orario",materiali:"Materiali didattici",spotted:"Spotted",sondaggi:"Sondaggi"};
     function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${name}`));document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));document.getElementById("crumbName").textContent=names[name];document.getElementById("sidebar").classList.remove("open");window.scrollTo({top:0,behavior:"smooth"})}
@@ -125,10 +126,9 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
 }
 
-loadPublishedAnnouncements(); </script>
+loadPublishedAnnouncements(); 
+  </script>
 
-
-</script>
  <div id="authModal" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:white;color:#222;padding:24px;border-radius:16px;width:100%;max-width:380px">
     <h2>Accedi a SannazzaroStudenti</h2>
@@ -199,5 +199,7 @@ loadPublishedAnnouncements(); </script>
 
   document.getElementById("authSignIn").addEventListener("click", () => authenticate("signin"));
   document.getElementById("authSignUp").addEventListener("click", () => authenticate("signup"));
-})(); </body>
+})(); 
+</script>
+</body>
 </html>
